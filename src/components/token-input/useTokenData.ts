@@ -1,29 +1,56 @@
 import { useQuery } from "@tanstack/react-query";
-import type { GetTokenDataInputs } from "./token.dto";
+import type { GetTokenDataInputs, PriceDataDto } from "./token.dto";
+import { API_URL, TOKEN_MAP } from "./data";
 
 export const useTokenData = ({ symbol, currency }: GetTokenDataInputs) => {
   return useQuery({
     queryKey: ["tokenData", symbol, currency],
     queryFn: async () => {
-      const tokenData = {
-        symbol,
-        name: "Wrapped Bitcoin",
-        price: {
-          USD: 110_000,
-        },
-        logoUrl:
-          "https://assets.coingecko.com/coins/images/7598/standard/wrapped_bitcoin_wbtc.png?1696507857",
-      };
+      console.debug("Fetching token data", { symbol, currency });
+      const token = TOKEN_MAP[symbol.toUpperCase()];
+      if (!token) {
+        console.error(`No static token found for ${symbol}`);
+        return 0;
+      }
 
-      return tokenData;
-    },
-    select: (data) => {
-        const priceData = data.price as Record<string, number>; 
+      try {
+        // fetch price data from Coingecko
+        const response = await fetch(
+          `${API_URL}/simple/price?ids=${token.coingeckoId.toLowerCase()}&vs_currencies=${currency.toLowerCase()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "x-cg-demo-api-key": import.meta.env.VITE_COINGECKO_API_KEY,
+            },
+          },
+        );
+
+        const data = await response.json();
+
+        // use static data for testing to avoid API call
+        // const data: PriceDataDto = {
+        //   bitcoin: {
+        //     usd: 108771,
+        //     cad: 148065,
+        //     eur: 92346,
+        //   },
+        // };
+        console.debug("Fetched token data", { data });
+
+        const price = data?.[token.coingeckoId]?.[currency.toLowerCase()];
+
         return {
-            ...data,
-            currency,
-            price: priceData[currency],
-        }
+          ...token,
+          price,
+        };
+      } catch (error) {
+        console.error("Error fetching token data", { error });
+        throw new Error("Error getting price data");
+      }
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes,
+    enabled: !!symbol && !!currency,
+    retry: false,
   });
 };

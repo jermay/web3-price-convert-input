@@ -11,22 +11,23 @@ const d8 = Intl.NumberFormat(undefined, { maximumFractionDigits: 8 });
 
 export const useTokenPriceConversion = (inputs: GetTokenDataInputs) => {
   const tokenResponse = useTokenData(inputs);
-  const { data: tokenData } = tokenResponse;
+  const { data } = tokenResponse;
+  const { price } = data || {};
 
   const convert = useCallback(
     (args: { inputMode: TokenInputMode; amount: number }) => {
-      console.debug("Converting...", { args, tokenData });
-      if (!tokenData) return 0;
+      console.debug("Converting...", { args, price });
+      if (!price) return 0;
 
       const { inputMode, amount } = args;
 
       if (inputMode === "token") {
-        return amount * tokenData.price;
+        return amount * price;
       }
 
-      return amount / tokenData.price;
+      return amount / price;
     },
-    [tokenData],
+    [price],
   );
 
   const formatAmount = useCallback(
