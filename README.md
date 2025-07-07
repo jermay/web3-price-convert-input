@@ -1,69 +1,40 @@
-# React + TypeScript + Vite
+# Web3 Price Convert Input
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Demonstrates a simple price conversion input using the Coingecko API.
 
-Currently, two official plugins are available:
+![component screenshot](image.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- Fetches token prices from Coingecko API
+- Converts between tokens and fiat currencies
+- Supported tokens: WETH, WBTC
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Possbile future features
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Refactor to use Storybook
+- Add more tokens. Can get token addresses from the Uniswap lists, would just need to map them to the Coingecko IDs for price data
+- Add a selector for the currency. Coingecko API can return prices in multiple currencies, but only one is used in the demo.
+- Wallet connection
+  - The demo doesn't need to connect to a wallet, but this component could be used to display the user's wallet balance and equivalent fiat balance
+  - Could use RainbowKit or Reown AppKit to connect to a wallet, these packages provide a pre-built UI for connecting to different wallets and hooks for switching networks
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Tech Stack
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- [React](https://reactjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [ShadCn UI](https://ui.shadcn.com/docs)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- [Wagmi](https://wagmi.sh/)
+- [Coingecko API](https://www.coingecko.com/en/api/documentation)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Getting Started
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. Clone the repository
+2. Install dependencies `npm install`
+3. Create a `.env` file based on the `.env.example` file
+   - Get your Coingecko API key from [Coingecko](https://docs.coingecko.com/v3.0.1/reference/setting-up-your-api-key)
+4. Start the development server `npm run dev`
+
