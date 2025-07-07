@@ -1,43 +1,59 @@
 import { useCallback } from "react";
 import type { GetTokenDataInputs, TokenInputMode } from "./token.dto";
-import { useTokenData } from "./useTokenData";
+import { useTokenPrice } from "./useTokenPrice";
+import { formatUnits, parseUnits } from "viem";
 
 export interface UseTokenPriceConversionInputs extends GetTokenDataInputs {
   inputMode: TokenInputMode;
 }
 
-const d2 = Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
-const d8 = Intl.NumberFormat(undefined, { maximumFractionDigits: 8 });
-
 export const useTokenPriceConversion = (inputs: GetTokenDataInputs) => {
-  const tokenResponse = useTokenData(inputs);
+  const tokenResponse = useTokenPrice(inputs);
   const { data } = tokenResponse;
-  const { price } = data || {};
+  const { price, decimals } = data || {};
 
   const convert = useCallback(
-    (args: { inputMode: TokenInputMode; amount: number }) => {
-      console.debug("Converting...", { args, price });
-      if (!price) return 0;
-
+    (args: { inputMode: TokenInputMode; amount: string }) => {
       const { inputMode, amount } = args;
+      console.debug("Converting...", { args, price });
 
-      if (inputMode === "token") {
-        return amount * price;
+      if (!price || !decimals) throw new Error("No price data");
+      if (!amount || isNaN(Number(amount))) {
+        throw new Error("Invalid amount input");
       }
 
-      return amount / price;
+      // use full precision of token decimals to avoid floating-point issues
+      const priceAsBigInt = parseUnits(price.toString(), decimals);
+
+      if (inputMode === "token") {
+        // amount is in tokens, convert to fiat
+        const tokenAmount = parseUnits(amount, decimals);
+        const fiatAmount =
+          (tokenAmount * priceAsBigInt) / BigInt(10 ** decimals);
+        return formatUnits(fiatAmount, decimals);
+      }
+
+      if (inputMode === "fiat") {
+        // amount is in fiat, convert to tokens
+        const fiatAmount = parseUnits(amount, decimals);
+        const tokenAmount =
+          (fiatAmount * BigInt(10 ** decimals)) / priceAsBigInt;
+        return formatUnits(tokenAmount, decimals);
+      }
+
+      throw new Error(`Unsupported input mode: ${inputMode}`);
     },
-    [price],
+    [price, decimals],
   );
 
   const formatAmount = useCallback(
     (args: { inputMode: TokenInputMode; amount: number }) => {
-      // TODO: format based on token decimals
-      return args.inputMode === "token"
-        ? d2.format(args.amount)
-        : d8.format(args.amount);
+      const d = new Intl.NumberFormat(undefined, {
+        maximumFractionDigits: decimals,
+      });
+      return d.format(args.amount);
     },
-    [],
+    [decimals],
   );
 
   return {

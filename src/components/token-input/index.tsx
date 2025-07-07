@@ -20,8 +20,8 @@ export const TokenInput = ({
 }: TokenInputProps) => {
   const queryClient = useQueryClient();
   const [inputMode, setInputMode] = useState<TokenInputMode>("fiat");
-  const [tokenAmount, setTokenAmount] = useState(0);
-  const [fiatAmount, setFiatAmount] = useState(0);
+  const [tokenAmount, setTokenAmount] = useState("");
+  const [fiatAmount, setFiatAmount] = useState("");
   const [currency] = useState(defaultCurrency);
 
   const { convert, error, formatAmount } = useTokenPriceConversion({
@@ -65,7 +65,7 @@ export const TokenInput = ({
     setTokenAmount(convertedAmount);
   };
 
-  const handleInputChange = (amount: number) => {
+  const handleInputChange = (amount: string) => {
     if (inputMode === "token") {
       setTokenAmount(amount);
       return;
@@ -87,7 +87,7 @@ export const TokenInput = ({
           placeholder="Enter amount"
           value={displayValues.input}
           type="number"
-          onChange={(e) => handleInputChange(Number(e.target.value))}
+          onChange={(e) => handleInputChange(e.target.value)}
         />
         <TokenIcon symbol={displayValues.symbolIn} />
       </div>
@@ -97,8 +97,8 @@ export const TokenInput = ({
       </Button>
       <Button onClick={toggleMode}>Switch Currencies</Button>
 
-      {displayValues.output > 0 && (
-        <span className="text-center">{`Amount of ${displayValues.symbolOut}: ${formatAmount({ inputMode, amount: displayValues.output })}`}</span>
+      {displayValues.output && (
+        <span className="text-center">{`Amount of ${displayValues.symbolOut}: ${formatAmount({ inputMode, amount: Number(displayValues.output) })}`}</span>
       )}
 
       {error && (

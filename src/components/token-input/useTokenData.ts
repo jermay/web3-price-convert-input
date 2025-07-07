@@ -1,56 +1,45 @@
-import { useQuery } from "@tanstack/react-query";
-import type { GetTokenDataInputs, PriceDataDto } from "./token.dto";
-import { API_URL, TOKEN_MAP } from "./data";
+import { useMemo } from "react";
+import { TOKEN_MAP } from "./data";
+import { useReadContracts } from "wagmi";
+import { erc20Abi, type Address } from "viem";
 
-export const useTokenData = ({ symbol, currency }: GetTokenDataInputs) => {
-  return useQuery({
-    queryKey: ["tokenData", symbol, currency],
-    queryFn: async () => {
-      console.debug("Fetching token data", { symbol, currency });
-      const token = TOKEN_MAP[symbol.toUpperCase()];
-      if (!token) {
-        console.error(`No static token found for ${symbol}`);
-        return 0;
-      }
+export interface UseTokenDataInputs {
+  chainId?: number;
+  symbol: string;
+}
 
-      try {
-        // fetch price data from Coingecko
-        const response = await fetch(
-          `${API_URL}/simple/price?ids=${token.coingeckoId.toLowerCase()}&vs_currencies=${currency.toLowerCase()}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "x-cg-demo-api-key": import.meta.env.VITE_COINGECKO_API_KEY,
-            },
-          },
-        );
+export const useTokenData = ({ chainId = 1, symbol }: UseTokenDataInputs) => {
+  const token = useMemo(() => TOKEN_MAP[symbol.toUpperCase()], [symbol]);
 
-        const data = await response.json();
-
-        // use static data for testing to avoid API call
-        // const data: PriceDataDto = {
-        //   bitcoin: {
-        //     usd: 108771,
-        //     cad: 148065,
-        //     eur: 92346,
-        //   },
-        // };
-        console.debug("Fetched token data", { data });
-
-        const price = data?.[token.coingeckoId]?.[currency.toLowerCase()];
+  return useReadContracts({
+    contracts: [
+      {
+        abi: erc20Abi,
+        address: token?.chainAddresses[chainId] as Address,
+        chainId,
+        functionName: "decimals",
+      },
+      {
+        abi: erc20Abi,
+        address: token?.chainAddresses[chainId] as Address,
+        chainId,
+        functionName: "symbol",
+      },
+    ],
+    query: {
+      staleTime: 1000 * 60 * 5, // 5 minutes,
+      enabled: !!token,
+      select: (data) => {
+        const decimals = data[0].result;
+        const symbol = data[1].result;
+        console.debug("On chain token data", { decimals, symbol, data });
 
         return {
           ...token,
-          price,
+          decimals,
+          symbol,
         };
-      } catch (error) {
-        console.error("Error fetching token data", { error });
-        throw new Error("Error getting price data");
-      }
+      },
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes,
-    enabled: !!symbol && !!currency,
-    retry: false,
   });
 };
