@@ -18,6 +18,10 @@ Demonstrates a simple price conversion input using the Coingecko API.
 - Wallet connection
   - The demo doesn't need to connect to a wallet, but this component could be used to display the user's wallet balance and equivalent fiat balance
   - Could use RainbowKit or Reown AppKit to connect to a wallet, these packages provide a pre-built UI for connecting to different wallets and hooks for switching networks
+- Swap functionality
+  - This component could be used to swap tokens for fiat, or to swap fiat for tokens instead of just displaying the conversion
+  - In this case, the wallet connection and currently connected network would need to be managed to match the UI. Wagmi and Reown AppKit provide hooks for this, but support is limted to EVM chains.
+  - Cross chain swaps between EVM and non-EVM chains would require chain abstraction at both the protocol and UI levels and would be a more complex implementation. Could use Tanstack Query to create a Wagmi-like inerface for non EVM chains.
 
 
 ## Tech Stack
